@@ -1,0 +1,81 @@
+Sub Yearly_stocks()
+    Dim totalRows As Long
+    Dim currentTicker As String
+    Dim totalVolume As LongLong
+    Dim tickerRow As Integer
+    Dim yearStart As Double
+    Dim yearEnd As Double
+    Dim maxPercent As Double
+    Dim minPercent As Double
+    Dim maxRow As Integer
+    Dim minRow As Integer
+    Dim maxVolume As LongLong
+    Dim maxVolRow As Integer
+    For Each ws In Worksheets
+        ws.Cells(1, 9) = "Ticker"
+        ws.Cells(1, 10) = "Yearly Change"
+        ws.Cells(1, 11) = "Percent Change"
+        ws.Cells(1, 12) = "Total Stock Volume"
+        totalRows = 0
+        For i = 1 To 1048576
+            If ws.Cells(i, 1) <> "" Then
+                totalRows = totalRows + 1
+            End If
+        Next i
+        totalVolume = 0
+        tickerRow = 2
+        currentTicker = ws.Cells(2, 1)
+        yearStart = ws.Cells(2, 3)
+        yearEnd = 0
+        For i = 2 To (totalRows + 1)
+            If ws.Cells(i, 1) = currentTicker Then
+                totalVolume = totalVolume + ws.Cells(i, 7)
+            Else
+                yearEnd = ws.Cells(i - 1, 6)
+                ws.Cells(tickerRow, 9) = currentTicker
+                ws.Cells(tickerRow, 10) = FormatNumber(yearEnd - yearStart, 2)
+                ws.Cells(tickerRow, 11) = FormatPercent(yearEnd / yearStart - 1)
+                ws.Cells(tickerRow, 12) = totalVolume
+                If i <> totalRows Then
+                    tickerRow = tickerRow + 1
+                    currentTicker = ws.Cells(i, 1)
+                    yearStart = ws.Cells(i, 3)
+                    totalVolume = ws.Cells(i, 7)
+                End If
+            End If
+        Next i
+        For i = 2 To 3001
+            If ws.Cells(i, 10) < 0 Then
+                ws.Cells(i, 10).Interior.ColorIndex = 3
+            ElseIf ws.Cells(i, 10) > 0 Then
+                ws.Cells(i, 10).Interior.ColorIndex = 4
+            End If
+        Next i
+        ws.Cells(1, 16) = "Ticker"
+        ws.Cells(1, 17) = "Value"
+        ws.Cells(2, 15) = "Greatest % Increase"
+        ws.Cells(3, 15) = "Greatest % Decrease"
+        ws.Cells(4, 15) = "Greatest Total Volume"
+        maxPercent = 0
+        minPercent = 0
+        For i = 2 To 3001
+            If ws.Cells(i, 11) < minPercent Then
+                minPercent = ws.Cells(i, 11)
+                minRow = i
+            ElseIf ws.Cells(i, 11) > maxPercent Then
+                maxPercent = ws.Cells(i, 11)
+                maxRow = i
+            End If
+            If ws.Cells(i, 12) > maxVolume Then
+                maxVolume = ws.Cells(i, 12)
+                maxVolRow = i
+            End If
+        Next i
+        ws.Cells(2, 16) = ws.Cells(maxRow, 9)
+        ws.Cells(2, 17) = FormatPercent(maxPercent)
+        ws.Cells(3, 16) = ws.Cells(minRow, 9)
+        ws.Cells(3, 17) = FormatPercent(minPercent)
+        ws.Cells(4, 16) = ws.Cells(maxVolRow, 9)
+        ws.Cells(4, 17) = maxVolume
+    Next ws
+End Sub
